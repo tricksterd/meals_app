@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:meals_app/data/dummy_data.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:meals_app/models/meal.dart';
 import 'package:meals_app/screens/categories.dart';
 import 'package:meals_app/screens/filters.dart';
 import 'package:meals_app/screens/meals.dart';
 import 'package:meals_app/widgets/main_drawer.dart';
 import 'package:meals_app/providers/meals_provider.dart';
+import 'package:meals_app/providers/favorites_provider.dart';
 
 const kInitialFilters = {
   Filter.glutenFree: false,
@@ -28,29 +27,6 @@ class TabsScreen extends ConsumerStatefulWidget {
 class _TabsScreenState extends ConsumerState<TabsScreen> {
   int _selectedPageIndex = 0;
   Map<Filter, bool> _selectedFilters = kInitialFilters;
-  final List<Meal> _favoriteMeals = [];
-
-  void _showInfoMessage(String message) {
-    ScaffoldMessenger.of(context).clearSnackBars();
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
-  }
-
-  void _toggleMealfavoriteStatus(Meal meal) {
-    final bool isFavorite = _favoriteMeals.contains(meal);
-
-    if (isFavorite) {
-      setState(() {
-        _favoriteMeals.remove(meal);
-      });
-      _showInfoMessage('Meal is no longer a favorite.');
-    } else {
-      setState(() {
-        _favoriteMeals.add(meal);
-      });
-      _showInfoMessage('Marked as favorite!');
-    }
-  }
 
   void _selectPage(int index) {
     setState(() {
@@ -93,13 +69,15 @@ class _TabsScreenState extends ConsumerState<TabsScreen> {
     }).toList();
 
     Widget activePage = CategoriesScreen(
-        availableMeals: availableMeals,
-        onToggleFavorite: _toggleMealfavoriteStatus);
+      availableMeals: availableMeals,
+    );
     String activePageTitle = 'Categories';
 
     if (_selectedPageIndex == 1) {
+      final favoriteMeals = ref.watch(favoriteMealsProvider);
       activePage = MealsScreen(
-          meals: _favoriteMeals, onToggleFavorite: _toggleMealfavoriteStatus);
+        meals: favoriteMeals,
+      );
       activePageTitle = 'Your Favorites';
     }
 
